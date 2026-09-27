@@ -1,26 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Room Finder</title>
+<title>Room Finder - Notification</title>
 <style>
-body{font-family:Arial; text-align:center; padding:30px; background:#f0f8ff}
-.box{background:white; padding:20px; border-radius:10px; max-width:400px; margin:auto; box-shadow:0 0 10px gray}
-input,button{width:90%; padding:10px; margin:10px; border-radius:5px}
-button{background:green; color:white; border:none}
+body{font-family:Arial; text-align:center; padding:20px; background:#f0f8ff}
+.box{background:white; padding:25px; border-radius:15px; max-width:500px; margin:auto; box-shadow:0 4px 15px gray}
+input,button{width:90%; padding:12px; margin:10px; border-radius:8px; border:1px solid #ccc; font-size:15px}
+button{background:green; color:white; border:none; font-weight:bold; cursor:pointer}
+.room{background:#e8f5e9; padding:12px; margin:10px 0; border-radius:8px; text-align:left}
+#rooms{display:none; margin-top:20px}
+.success{color:green; font-weight:bold; background:#dcfce7; padding:10px; border-radius:8px; margin-top:10px}
 </style>
 </head>
 <body>
 <div class="box">
 <h2>Room Finder 🏠</h2>
 <p>City takha, rooms chi mahiti email var yeil</p>
-<form action="https://formsubmit.co/snehadeshmukh270@gmail.com" method="POST">
-<input type="text" name="city" placeholder="City Name - Nagpur" required>
-<input type="email" name="email" placeholder="Tumcha Email" required>
-<input type="hidden" name="_subject" value="New Room Search - Room Finder">
-<input type="hidden" name="_autoresponse" value="Thank you! Tumhi taklelya city madhe rooms available aahet. Aamhi lavkarach contact karu.">
-<input type="hidden" name="_captcha" value="false">
+
+<form id="roomForm">
+<input type="text" id="city" name="city" placeholder="City Name - Nagpur" required>
+<input type="email" id="email" name="email" placeholder="Tumcha Email" required>
 <button type="submit">Search & Get Notification</button>
 </form>
+
+<div id="msg"></div>
+
+<div id="rooms">
+<h3 id="cityTitle"></h3>
+<div id="roomList"></div>
 </div>
+</div>
+
+<script>
+const allRooms = {
+ "nagpur": ["1RK Sitabuldi - ₹5000 - 9876543210", "1BHK Manish Nagar - ₹7000", "Girls Hostel Dharampeth - ₹4000"],
+ "pune": ["1BHK Kothrud - ₹12000", "PG Hinjewadi - ₹6000"],
+ "mumbai": ["1RK Andheri - ₹15000"],
+ "default": ["1RK Sitabuldi - ₹5000", "1BHK Manish Nagar - ₹7000"]
+};
+
+document.getElementById('roomForm').addEventListener('submit', function(e){
+ e.preventDefault();
+ let city = document.getElementById('city').value.toLowerCase();
+ let email = document.getElementById('email').value;
+
+ let rooms = allRooms[city] || allRooms["default"];
+
+ // 1. DAKHVA ROOMS
+ document.getElementById('cityTitle').innerText = city.toUpperCase() + " madhe " + rooms.length + " rooms available:";
+ let listHTML = "";
+ rooms.forEach(r=>{ listHTML += `<div class="room">✅ ${r} <span style="float:right;color:green">Available</span></div>`; });
+ document.getElementById('roomList').innerHTML = listHTML;
+ document.getElementById('rooms').style.display = "block";
+ document.getElementById('msg').innerHTML = `<div class="success">📧 Notification ${email} var pathavli! ${city} madhle rooms chi list khali aahe.</div>`;
+
+ // 2. KHARA EMAIL PATHAV - FormSubmit la
+ fetch("https://formsubmit.co/ajax/snehadeshmukh270@gmail.com", {
+   method: "POST",
+   headers: { 'Content-Type': 'application/json' },
+   body: JSON.stringify({
+     city: city,
+     email: email,
+     subject: "New Room Search - Room Finder",
+     message: `Konitari search kela: City=${city}, User Email=${email}, Available Rooms: ${rooms.join(', ')}`,
+     _autoresponse: `Thank you! ${city} madhe ${rooms.length} rooms available aahet. Aamhi lavkarach contact karu. Rooms: ${rooms.join(', ')}`
+   })
+ })
+.then(res=> console.log("Email sent"))
+.catch(err=> console.log(err));
+});
+</script>
 </body>
 </html>
